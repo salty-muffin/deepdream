@@ -85,8 +85,7 @@ def save_and_maybe_display_image(config, dump_img, should_display=True, name_mod
     assert isinstance(dump_img, np.ndarray), f'Expected numpy array got {type(dump_img)}.'
 
     # step1: figure out the dump dir location
-    dump_dir = config['dump_dir']
-    os.makedirs(dump_dir, exist_ok=True)
+    os.makedirs(config['dump_dir'], exist_ok=True)
 
     # step2: define the output image name
     if name_modifier is not None:
@@ -98,7 +97,7 @@ def save_and_maybe_display_image(config, dump_img, should_display=True, name_mod
         dump_img = (dump_img*255).astype(np.uint8)
 
     # step3: write image to the file system
-    cv.imwrite(os.path.join(dump_dir, dump_img_name), dump_img[:, :, ::-1])  # ::-1 because opencv expects BGR (and not RGB) format...
+    cv.imwrite(os.path.join(config['dump_dir'], dump_img_name), dump_img[:, :, ::-1])  # ::-1 because opencv expects BGR (and not RGB) format...
 
     # step4: maybe display part of the function
     if should_display:

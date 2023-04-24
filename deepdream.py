@@ -65,7 +65,7 @@ def deep_dream_static_image(config, img):
         exit(0)
 
     if img is None:  # load either image or start from pure noise image
-        img_path = os.path.join(config['inputs_path'], config['input'])
+        img_path = config['input']
         img = utils.load_image(img_path, target_shape=config['img_width'])  # load numpy, [0, 1], channel-last, RGB image
         if config['use_noise']:
             shape = img.shape
@@ -96,9 +96,8 @@ def deep_dream_static_image(config, img):
 
 # Feed the output dreamed image back to the input and repeat
 def deep_dream_video_ouroboros(config):
-    img_path = os.path.join(config['inputs_path'], config['input'])
     # load numpy, [0, 1], channel-last, RGB image, None will cause it to start from the uniform noise [0, 1] image
-    frame = None if config['use_noise'] else utils.load_image(img_path, target_shape=config['img_width'])
+    frame = None if config['use_noise'] else utils.load_image(config['input'], target_shape=config['img_width'])
 
     for frame_id in tqdm(range(config['video_length'])):
         print(f'Dream iteration {frame_id+1}.')
@@ -110,19 +109,16 @@ def deep_dream_video_ouroboros(config):
 
 
 def deep_dream_video(config):
-    video_path = os.path.join(config['inputs_path'], config['input'])
-    tmp_input_dir = os.path.join(config['out_videos_path'], 'tmp_input')
-    tmp_output_dir = os.path.join(config['out_videos_path'], 'tmp_out')
-    config['dump_dir'] = tmp_output_dir
-    os.makedirs(tmp_input_dir, exist_ok=True)
-    os.makedirs(tmp_output_dir, exist_ok=True)
+    config['dump_dir'] = config['tmp_output']
+    os.makedirs(config['tmp_input'], exist_ok=True)
+    os.makedirs(config['tmp_output'], exist_ok=True)
 
-    metadata = video_utils.dump_frames(video_path, tmp_input_dir)
+    metadata = video_utils.dump_frames(config['input'], config['tmp_input'])
 
     last_img = None
-    for frame_id, frame_name in enumerate(tqdm(os.listdir(tmp_input_dir))):
+    for frame_id, frame_name in enumerate(tqdm(os.listdir(config['tmp_input']))):
         print(f'Processing frame {frame_id}')
-        frame_path = os.path.join(tmp_input_dir, frame_name)
+        frame_path = os.path.join(config['tmp_input'], frame_name)
         frame = utils.load_image(frame_path, target_shape=config['img_width'])
         if config['blend'] is not None and last_img is not None:
             # 1.0 - get only the current frame, 0.5 - combine with last dreamed frame and stabilize the video
@@ -134,26 +130,20 @@ def deep_dream_video(config):
 
     video_utils.create_video_from_intermediate_results(config, metadata)
 
-    shutil.rmtree(tmp_input_dir)  # remove tmp files
-    print(f'Deleted tmp frame dump directory {tmp_input_dir}.')
+    shutil.rmtree(config['tmp_input'])  # remove tmp files
+    print(f'Deleted tmp frame dump directory {config["tmp_input"]}.')
 
 
 if __name__ == "__main__":
-    #
-    # Fixed args - don't change these unless you have a good reason
-    #
-    inputs_path = os.path.join(os.path.dirname(__file__), 'data', 'input')
-    out_images_path = os.path.join(os.path.dirname(__file__), 'data', 'out-images')
-    out_videos_path = os.path.join(os.path.dirname(__file__), 'data', 'out-videos')
-    os.makedirs(out_images_path, exist_ok=True)
-    os.makedirs(out_videos_path, exist_ok=True)
-
     #
     # Modifiable args - feel free to play with these (only a small subset is exposed by design to avoid cluttering)
     #
     parser = argparse.ArgumentParser()
     # Common params
-    parser.add_argument("--input", type=str, help="Input IMAGE or VIDEO name that will be used for dreaming", default='figures.jpg')
+    parser.add_argument("--input", type=str, help="Input IMAGE or VIDEO name that will be used for dreaming")
+    parser.add_argument("--out_dir", type=str, help="Directory for the final results")
+    parser.add_argument("--tmp_input", type=str, help="Temporary input folder for processing videos", default=os.path.join("temp", "tmp_input"))
+    parser.add_argument("--tmp_output", type=str, help="Temporary output folder for processing videos", default=os.path.join("temp", "tmp_output"))
     parser.add_argument("--img_width", type=int, help="Resize input image to this width", default=600)
     parser.add_argument("--model", choices=SupportedModels, help="Neural network (model) to use for dreaming", default=SupportedModels.VGG16_EXPERIMENTAL)
     parser.add_argument("--pretrained_weights", choices=SupportedPretrainedWeights, help="Pretrained weights to use for the above model", default=SupportedPretrainedWeights.IMAGENET)
@@ -186,11 +176,10 @@ if __name__ == "__main__":
     config = dict()
     for arg in vars(args):
         config[arg] = getattr(args, arg)
-    config['inputs_path'] = inputs_path
-    config['out_images_path'] = out_images_path
-    config['out_videos_path'] = out_videos_path
-    config['dump_dir'] = config['out_videos_path'] if config['is_video'] else config['out_images_path']
-    config['dump_dir'] = os.path.join(config['dump_dir'], f'{config["model"].name}_{config["pretrained_weights"].name}')
+    config['dump_dir'] = os.path.join(config['out_dir'], f'{config["model"].name}_{config["pretrained_weights"].name}')
+
+    # creating necessary directories
+    os.makedirs(config['out_dir'], exist_ok=True)
 
     # DeepDream algorithm in 3 flavours: static image, video and ouroboros (feeding net output to it's input)
     if any([config['input'].endswith(video_ext) for video_ext in SUPPORTED_VIDEO_FORMATS]):  # only support mp4 atm
