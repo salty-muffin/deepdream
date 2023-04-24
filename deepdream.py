@@ -116,7 +116,7 @@ def deep_dream_video(config):
     metadata = video_utils.dump_frames(config['input'], config['tmp_input'])
 
     last_img = None
-    for frame_id, frame_name in enumerate(tqdm(os.listdir(config['tmp_input']))):
+    for frame_id, frame_name in enumerate(tqdm(sorted(os.listdir(config['tmp_input'])))):
         print(f'Processing frame {frame_id}')
         frame_path = os.path.join(config['tmp_input'], frame_name)
         frame = utils.load_image(frame_path, target_shape=config['img_width'])
