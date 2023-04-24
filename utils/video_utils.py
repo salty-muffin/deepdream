@@ -68,7 +68,7 @@ def dump_frames(video_path, dump_dir):
             extract_options = ['-r', str(fps)]
             out_frame_pattern = os.path.join(dump_dir, 'frame_%6d.jpg')
 
-            subprocess.call([ffmpeg, *input_options, *extract_options, out_frame_pattern])
+            subprocess.call([path, *input_options, *extract_options, out_frame_pattern])
 
             print(f'Dumped frames to {dump_dir}.')
             metadata = {'pattern': out_frame_pattern, 'fps': fps}
