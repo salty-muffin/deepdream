@@ -101,7 +101,6 @@ def deep_dream_video_ouroboros(config):
     frame = None if config['use_noise'] else utils.load_image(config['input'], target_shape=config['img_width'])
 
     for frame_id in tqdm(range(config['video_length'])):
-        print(f'Dream iteration {frame_id+1}.')
         frame = deep_dream_static_image(config, frame)
         utils.save_and_maybe_display_image(config, frame, should_display=config['should_display'], name_modifier=frame_id)
         frame = utils.transform_frame(config, frame)  # transform frame e.g. central zoom, spiral, etc.
