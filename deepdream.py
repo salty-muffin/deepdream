@@ -5,6 +5,7 @@
     go ahead and experiment with functions in the playground.py file.
 """
 
+from typing import List
 import os
 import argparse
 import shutil
@@ -134,6 +135,10 @@ def deep_dream_video(config):
     print(f'Deleted tmp frame dump directory {config["tmp_input"]}.')
 
 
+def parse_comma_list(input: str) -> List[str]:
+    return [element.strip() for element in input.split(',')]
+
+
 if __name__ == "__main__":
     #
     # Modifiable args - feel free to play with these (only a small subset is exposed by design to avoid cluttering)
@@ -147,7 +152,7 @@ if __name__ == "__main__":
     parser.add_argument("--img_width", type=int, help="Resize input image to this width", default=600)
     parser.add_argument("--model", choices=SupportedModels, help="Neural network (model) to use for dreaming", default=SupportedModels.VGG16_EXPERIMENTAL)
     parser.add_argument("--pretrained_weights", choices=SupportedPretrainedWeights, help="Pretrained weights to use for the above model", default=SupportedPretrainedWeights.IMAGENET)
-    parser.add_argument("--layers_to_use", type=str, help="Layer whose activations we should maximize while dreaming", default=['relu4_3'])
+    parser.add_argument("--layers_to_use", type=str, help="Layer whose activations we should maximize while dreaming (in a comma seperated list)", default='relu4_3')
 
     # Main params for experimentation (especially pyramid_size and pyramid_ratio)
     parser.add_argument("--pyramid_size", type=int, help="Number of images in an image pyramid", default=4)
@@ -177,6 +182,7 @@ if __name__ == "__main__":
     for arg in vars(args):
         config[arg] = getattr(args, arg)
     config['dump_dir'] = os.path.join(config['out_dir'], f'{config["model"].name}_{config["pretrained_weights"].name}')
+    config['layers_to_use'] = parse_comma_list(config['layers_to_use'])
 
     # creating necessary directories
     os.makedirs(config['out_dir'], exist_ok=True)

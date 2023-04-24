@@ -19,6 +19,7 @@
             "program": "deepdream.py",
             "args": [
                 "--input=data/input/green_bridge.jpg",
+                "--layers_to_use=relu5_2,relu5_3",
                 "--pyramid_size=1",
                 "--out_dir=out",
             ],
