@@ -42,37 +42,39 @@ def create_video_from_intermediate_results(config, metadata=None):
     number_of_frames_to_process = len(valid_frames(config['dump_dir']))  # default - don't trim process every frame
     out_file_name = create_video_name(config)
 
-    ffmpeg = 'ffmpeg.exe'
-    if shutil.which(ffmpeg):  # if ffmpeg.exe is in system path
-        input_options = ['-r', str(fps), '-i', img_pattern]
-        trim_video_command = ['-start_number', str(first_frame), '-vframes', str(number_of_frames_to_process)]
-        encoding_options = ['-c:v', 'libx264', '-crf', '25', '-pix_fmt', 'yuv420p']
-        pad_options = ['-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2']  # libx264 won't work for odd dimensions
-        out_video_path = os.path.join(config['out_videos_path'], out_file_name)
-        subprocess.call([ffmpeg, *input_options, *trim_video_command, *encoding_options, *pad_options, out_video_path])
-        print(f'Saved video to {out_video_path}.')
-        return out_video_path
-    else:
-        raise Exception(f'{ffmpeg} not found in the system path, aborting.')
+    ffmpeg = ['ffmpeg.exe', 'ffmpeg']
+    for path in ffmpeg:
+        if shutil.which(path):  # if ffmpeg.exe is in system path
+            input_options = ['-r', str(fps), '-i', img_pattern]
+            trim_video_command = ['-start_number', str(first_frame), '-vframes', str(number_of_frames_to_process)]
+            encoding_options = ['-c:v', 'libx264', '-crf', '25', '-pix_fmt', 'yuv420p']
+            pad_options = ['-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2']  # libx264 won't work for odd dimensions
+            out_video_path = os.path.join(config['out_videos_path'], out_file_name)
+            subprocess.call([path, *input_options, *trim_video_command, *encoding_options, *pad_options, out_video_path])
+            print(f'Saved video to {out_video_path}.')
+            return out_video_path
+    
+    raise Exception('ffmpeg not found in the system path, aborting.')
 
 
 def dump_frames(video_path, dump_dir):
-    ffmpeg = 'ffmpeg.exe'
-    if shutil.which(ffmpeg):  # if ffmpeg.exe is in system path
-        cap = cv.VideoCapture(video_path)
-        fps = int(cap.get(cv.CAP_PROP_FPS))
+    ffmpeg = ['ffmpeg.exe', 'ffmpeg']
+    for path in ffmpeg:
+        if shutil.which(path):  # if ffmpeg.exe is in system path
+            cap = cv.VideoCapture(video_path)
+            fps = int(cap.get(cv.CAP_PROP_FPS))
 
-        input_options = ['-i', video_path]
-        extract_options = ['-r', str(fps)]
-        out_frame_pattern = os.path.join(dump_dir, 'frame_%6d.jpg')
+            input_options = ['-i', video_path]
+            extract_options = ['-r', str(fps)]
+            out_frame_pattern = os.path.join(dump_dir, 'frame_%6d.jpg')
 
-        subprocess.call([ffmpeg, *input_options, *extract_options, out_frame_pattern])
+            subprocess.call([ffmpeg, *input_options, *extract_options, out_frame_pattern])
 
-        print(f'Dumped frames to {dump_dir}.')
-        metadata = {'pattern': out_frame_pattern, 'fps': fps}
-        return metadata
-    else:
-        raise Exception(f'{ffmpeg} not found in the system path, aborting.')
+            print(f'Dumped frames to {dump_dir}.')
+            metadata = {'pattern': out_frame_pattern, 'fps': fps}
+            return metadata
+        
+    raise Exception('ffmpeg not found in the system path, aborting.')
 
 
 def create_gif(frames_dir, out_path):

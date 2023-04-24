@@ -1,0 +1,40 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "generate image",
+            "type": "python",
+            "request": "launch",
+            "program": "deepdream.py",
+            "args": [
+                "--input=data/input/green_bridge.jpg",
+                "--pyramid_size=1",
+                "--out_dir=out",
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "generate video",
+            "type": "python",
+            "request": "launch",
+            "program": "deepdream.py",
+            "args": [
+                "--input=in/clean.mp4",
+                "--pyramid_size=1",
+                "--out_dir=out",
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}
