@@ -8,6 +8,7 @@
 import os
 import argparse
 import shutil
+from tqdm import tqdm
 
 
 import numpy as np
@@ -99,7 +100,7 @@ def deep_dream_video_ouroboros(config):
     # load numpy, [0, 1], channel-last, RGB image, None will cause it to start from the uniform noise [0, 1] image
     frame = None if config['use_noise'] else utils.load_image(img_path, target_shape=config['img_width'])
 
-    for frame_id in range(config['video_length']):
+    for frame_id in tqdm(range(config['video_length'])):
         print(f'Dream iteration {frame_id+1}.')
         frame = deep_dream_static_image(config, frame)
         utils.save_and_maybe_display_image(config, frame, should_display=config['should_display'], name_modifier=frame_id)
@@ -119,7 +120,7 @@ def deep_dream_video(config):
     metadata = video_utils.dump_frames(video_path, tmp_input_dir)
 
     last_img = None
-    for frame_id, frame_name in enumerate(os.listdir(tmp_input_dir)):
+    for frame_id, frame_name in enumerate(tqdm(os.listdir(tmp_input_dir))):
         print(f'Processing frame {frame_id}')
         frame_path = os.path.join(tmp_input_dir, frame_name)
         frame = utils.load_image(frame_path, target_shape=config['img_width'])
